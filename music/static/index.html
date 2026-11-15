@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Пересечение: сравнение музыкальных вкусов</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;700&family=Unbounded:wght@600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f3fa;--card:#fff;--ink:#18142b;--mut:#6a6684;--line:#dedbee;--acc:#4a3df0;--hi:#ffd23f;--hiink:#18142b;--err:#c0262d}
+@media (prefers-color-scheme:dark){:root{--bg:#121022;--card:#1c1933;--ink:#eceaf7;--mut:#9a96b8;--line:#322e55;--acc:#8c82ff;--err:#ff7b80}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 Onest,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:860px;margin:0 auto;padding:28px 18px 56px}
+h1,h2{font-family:Unbounded,Onest,system-ui,sans-serif;margin:0}
+h1{font-weight:800;font-size:clamp(28px,6vw,44px);line-height:1.1}
+h2{font-weight:600;font-size:18px}
+.hero{display:flex;gap:22px;align-items:center;margin-bottom:24px}
+.venn{position:relative;flex:none;width:110px;height:70px}
+.venn i{position:absolute;top:0;width:70px;height:70px;border-radius:50%}
+.venn i:first-child{left:0;border:3px solid var(--acc)}
+.venn i:nth-child(2){right:0;border:3px solid var(--ink)}
+.venn b{position:absolute;left:50%;top:50%;width:30px;height:60px;transform:translate(-50%,-50%);background:var(--hi);clip-path:ellipse(50% 50%)}
+p{margin:6px 0 0;color:var(--mut)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+input{flex:1;min-width:180px;font:inherit;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+button.go{font:600 15px Onest,system-ui,sans-serif;padding:10px 18px;border-radius:10px;border:0;background:var(--acc);color:#fff;cursor:pointer}
+button.go:disabled{opacity:.5;cursor:wait}
+button.link{all:unset;cursor:pointer;color:var(--acc);text-decoration:underline}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.msg{min-height:1.4em;margin-top:8px;color:var(--err)}
+.code{font:800 26px Unbounded,system-ui,sans-serif;letter-spacing:.08em;color:var(--acc)}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;background:var(--card);border-radius:12px;overflow:hidden}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
+.pct{font:800 20px Unbounded,system-ui,sans-serif;color:var(--acc)}
+section{margin-top:28px}
+.head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px}
+.count{font:600 14px Unbounded,system-ui,sans-serif;background:var(--hi);color:var(--hiink);padding:2px 10px;border-radius:99px}
+ul{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:12px}
+li{padding:9px 14px;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:4px 10px;justify-content:space-between}
+li:last-child{border:0}
+li small{color:var(--mut)}
+.empty{padding:16px;color:var(--mut);background:var(--card);border:1px dashed var(--line);border-radius:12px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<div class="hero">
+  <div class="venn" aria-hidden="true"><i></i><i></i><b></b></div>
+  <div><h1>Пересечение</h1><p>Сравните вкусы в Яндекс Музыке: общие исполнители, треки и альбомы.</p></div>
+</div>
+
+<div class="box" id="start">
+  <h2>Начать</h2>
+  <p>Создайте комнату и отправьте код друзьям или войдите в чужую.</p>
+  <div class="row" style="margin-top:12px">
+    <button class="go" id="create">Создать комнату</button>
+    <input id="codeIn" placeholder="Код комнаты" maxlength="6" autocapitalize="characters" aria-label="Код комнаты">
+    <button class="go" id="enter">Войти</button>
+  </div>
+  <div class="msg" id="startMsg" role="alert"></div>
+</div>
+
+<div id="roomView" hidden>
+  <div class="box">
+    <p>Код комнаты — отправьте его друзьям</p>
+    <div class="code" id="roomCode"></div>
+    <p><button class="link" id="copy">Скопировать ссылку</button> · <button class="link" id="leave">Выйти из комнаты</button></p>
+  </div>
+  <div class="box">
+    <h2>Добавить мою музыку</h2>
+    <p>Нажмите кнопку, откройте ссылку Яндекса и введите код. Токен искать не нужно.</p>
+    <div class="row" style="margin-top:12px"><button class="go" id="ylogin">Войти через Яндекс</button></div>
+    <div id="loginBox" hidden style="margin-top:12px"></div>
+    <p style="margin-top:18px">Или вставьте токен вручную. Он используется один раз и нигде не сохраняется.</p>
+    <div class="row" style="margin-top:12px">
+      <input id="token" type="password" autocomplete="off" placeholder="Токен" aria-label="Токен Яндекс Музыки">
+      <button class="go" id="join">Добавить</button>
+    </div>
+    <div class="msg" id="joinMsg" role="alert"></div>
+  </div>
+  <div id="out"></div>
+</div>
+</main>
+<script>
+var $=function(s){return document.querySelector(s)};
+var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})};
+var room="",timer=null;
+var KINDS=[["artists","Общие исполнители"],["tracks","Общие треки"],["albums","Общие альбомы"]];
+
+async function api(path,body){
+  var r=await fetch(path,body===undefined?{}:{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});
+  var d={};try{d=await r.json()}catch(e){}
+  if(!r.ok)throw new Error(d.error||"Ошибка сервера");
+  return d;
+}
+function open_(code){
+  room=code;location.hash=code;
+  $("#start").hidden=true;$("#roomView").hidden=false;$("#roomCode").textContent=code;
+  refresh();clearInterval(timer);timer=setInterval(refresh,8000);
+}
+function leave(){
+  room="";clearInterval(timer);history.replaceState(null,"",location.pathname);
+  $("#start").hidden=false;$("#roomView").hidden=true;$("#out").innerHTML="";
+}
+async function refresh(){
+  try{render(await api("/api/rooms/"+room))}
+  catch(e){leave();$("#startMsg").textContent=e.message}
+}
+function render(d){
+  var out=$("#out");
+  if(d.users.length<2){
+    out.innerHTML='<div class="empty">'+(d.users.length?'В комнате пока один человек: '+esc(d.users[0].name)+'. Ждём остальных.':'Пока никто не добавил музыку.')+'</div>';return;
+  }
+  var h='<section><div class="head"><h2>Совпадение по исполнителям</h2></div><div class="wrap"><table><tr><th></th>';
+  d.users.forEach(function(u){h+='<th>'+esc(u.name)+'</th>'});
+  h+='</tr>';
+  d.users.forEach(function(u,i){
+    h+='<tr><th>'+esc(u.name)+'</th>';
+    d.matrix[i].forEach(function(v){h+='<td>'+(v===null?'—':'<span class="pct">'+v+'%</span>')+'</td>'});
+    h+='</tr>';
+  });
+  h+='</table></div><p>Процент — доля общих исполнителей среди всех, кого слушают двое вместе.</p></section>';
+  KINDS.forEach(function(kd){
+    var c=d.common[kd[0]];
+    h+='<section><div class="head"><h2>'+kd[1]+' <small style="font-weight:400;color:var(--mut)">у всех в комнате</small></h2><span class="count">'+c.total+'</span></div>';
+    if(!c.total)h+='<div class="empty">Общего нет.</div>';
+    else{
+      h+='<ul>'+c.items.map(function(r){
+        var s=kd[0]==="artists"?'<small>'+r.per.map(function(n,i){return esc(d.users[i].name)+': '+n}).join(', ')+'</small>':'';
+        return'<li><span>'+esc(r.name)+'</span>'+s+'</li>';
+      }).join('')+'</ul>';
+      if(c.total>c.items.length)h+='<p>…и ещё '+(c.total-c.items.length)+'</p>';
+    }
+    h+='</section>';
+  });
+  out.innerHTML=h;
+}
+$("#create").onclick=async function(){
+  try{open_((await api("/api/rooms",{})).code)}catch(e){$("#startMsg").textContent=e.message}
+};
+$("#enter").onclick=function(){
+  var c=$("#codeIn").value.trim().toUpperCase();
+  if(c.length!==6){$("#startMsg").textContent="Код состоит из 6 букв";return}
+  $("#startMsg").textContent="";room=c;
+  api("/api/rooms/"+c).then(function(){open_(c)}).catch(function(e){$("#startMsg").textContent=e.message});
+};
+$("#join").onclick=async function(){
+  var b=$("#join"),m=$("#joinMsg");m.textContent="";b.disabled=true;b.textContent="Загружаем…";
+  try{
+    await api("/api/rooms/"+room+"/join",{token:$("#token").value});
+    $("#token").value="";refresh();
+  }catch(e){m.textContent=e.message}
+  b.disabled=false;b.textContent="Добавить";
+};
+$("#ylogin").onclick=async function(){
+  var m=$("#joinMsg"),b=$("#ylogin"),box=$("#loginBox");m.textContent="";b.disabled=true;
+  try{
+    var d=await api("/api/rooms/"+room+"/login",{});
+    box.hidden=false;
+    box.innerHTML='Откройте <a href="'+esc(d.url)+'" target="_blank" rel="noopener">'+esc(d.url)+'</a> и введите код <span class="code">'+esc(d.code)+'</span>. Эта страница обновится сама.';
+    var t=setInterval(async function(){
+      try{
+        var s=await api("/api/login/"+d.id);
+        if(s.status==="wait")return;
+        clearInterval(t);box.hidden=true;b.disabled=false;
+        if(s.status==="ok")refresh();else m.textContent=s.error||"Ошибка входа";
+      }catch(e){clearInterval(t);box.hidden=true;b.disabled=false;m.textContent=e.message}
+    },3000);
+  }catch(e){m.textContent=e.message;b.disabled=false}
+};
+$("#copy").onclick=function(){
+  var u=location.origin+location.pathname+"#"+room;
+  (navigator.clipboard?navigator.clipboard.writeText(u):Promise.reject()).then(function(){$("#copy").textContent="Скопировано"},function(){prompt("Ссылка:",u)});
+};
+$("#leave").onclick=leave;
+if(/^[A-Za-z]{6}$/.test(location.hash.slice(1))){
+  var c=location.hash.slice(1).toUpperCase();
+  api("/api/rooms/"+c).then(function(){open_(c)}).catch(function(e){$("#startMsg").textContent=e.message});
+}
+</script>
+</body>
+</html>
